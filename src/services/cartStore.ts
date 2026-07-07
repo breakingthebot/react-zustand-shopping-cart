@@ -17,6 +17,7 @@ interface CartState {
   isCartOpen: boolean;
   isCheckingOut: boolean;
   checkoutSuccess: boolean;
+  appliedDiscountCode: string | null;
   
   // Actions
   addToCart: (product: Product) => void;
@@ -28,10 +29,14 @@ interface CartState {
   startCheckout: () => void;
   completeCheckout: () => void;
   resetCheckout: () => void;
+  applyPromoCode: (code: string) => { success: boolean; message: string };
+  removePromoCode: () => void;
   
   // Computed Getters (methods that calculate from state)
   getTotalItems: () => number;
   getSubtotal: () => number;
+  getDiscountAmount: () => number;
+  getDiscountedSubtotal: () => number;
   getTax: () => number;
   getShipping: () => number;
   getTotalPrice: () => number;
@@ -44,6 +49,7 @@ export const useCartStore = create<CartState>()(
       isCartOpen: false,
       isCheckingOut: false,
       checkoutSuccess: false,
+      appliedDiscountCode: null,
 
       /**
        * Adds a product to the cart. If the product is already in the cart, its quantity is incremented.
@@ -140,6 +146,7 @@ export const useCartStore = create<CartState>()(
           cart: [],
           isCheckingOut: false,
           checkoutSuccess: true,
+          appliedDiscountCode: null,
         });
       },
 
@@ -151,6 +158,45 @@ export const useCartStore = create<CartState>()(
           isCheckingOut: false,
           checkoutSuccess: false,
         });
+      },
+
+      /**
+       * Validates and applies a coupon code.
+       * @param code The input coupon code.
+       */
+      applyPromoCode: (code) => {
+        const cleanCode = code.trim().toUpperCase();
+        const validCodes = ['SAVE10', 'SAVE20', 'FLAT15', 'FREESHIP'];
+
+        if (validCodes.includes(cleanCode)) {
+          set({ appliedDiscountCode: cleanCode });
+          
+          let promoMessage = '';
+          switch (cleanCode) {
+            case 'SAVE10':
+              promoMessage = '10% discount applied!';
+              break;
+            case 'SAVE20':
+              promoMessage = '20% discount applied!';
+              break;
+            case 'FLAT15':
+              promoMessage = '$15.00 flat discount applied!';
+              break;
+            case 'FREESHIP':
+              promoMessage = 'Free shipping discount applied!';
+              break;
+          }
+          return { success: true, message: promoMessage };
+        }
+
+        return { success: false, message: 'Invalid promo code.' };
+      },
+
+      /**
+       * Dismisses/removes the applied coupon code.
+       */
+      removePromoCode: () => {
+        set({ appliedDiscountCode: null });
       },
 
       // Computed Getter Implementations
@@ -165,25 +211,51 @@ export const useCartStore = create<CartState>()(
         );
       },
 
+      getDiscountAmount: () => {
+        const subtotal = get().getSubtotal();
+        const code = get().appliedDiscountCode;
+        if (!code) return 0;
+        
+        switch (code) {
+          case 'SAVE10':
+            return subtotal * 0.1;
+          case 'SAVE20':
+            return subtotal * 0.2;
+          case 'FLAT15':
+            return Math.min(subtotal, 15);
+          default:
+            return 0; // FREESHIP does not discount subtotal itself
+        }
+      },
+
+      getDiscountedSubtotal: () => {
+        return Math.max(0, get().getSubtotal() - get().getDiscountAmount());
+      },
+
       getTax: () => {
-        return get().getSubtotal() * TAX_RATE;
+        return get().getDiscountedSubtotal() * TAX_RATE;
       },
 
       getShipping: () => {
-        const subtotal = get().getSubtotal();
-        if (subtotal === 0) return 0;
-        return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING_COST;
+        const discountedSubtotal = get().getDiscountedSubtotal();
+        if (discountedSubtotal === 0) return 0;
+        if (get().appliedDiscountCode === 'FREESHIP') return 0;
+        
+        return discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING_COST;
       },
 
       getTotalPrice: () => {
-        return get().getSubtotal() + get().getTax() + get().getShipping();
+        return get().getDiscountedSubtotal() + get().getTax() + get().getShipping();
       },
     }),
     {
       name: 'shopping-cart-storage',
       storage: createJSONStorage(() => localStorage),
-      // Only persist cart array; UI states should not persist.
-      partialize: (state) => ({ cart: state.cart } as CartState),
+      // Persist cart array and applied coupon code.
+      partialize: (state) => ({
+        cart: state.cart,
+        appliedDiscountCode: state.appliedDiscountCode
+      } as CartState),
     }
   )
 );

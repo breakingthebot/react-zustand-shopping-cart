@@ -17,6 +17,14 @@ export const Cart: React.FC = () => {
   const startCheckout = useCartStore((state) => state.startCheckout);
   const addToast = useToastStore((state) => state.addToast);
 
+  // Promo Code State & Actions
+  const [promoInput, setPromoInput] = React.useState('');
+  const appliedDiscountCode = useCartStore((state) => state.appliedDiscountCode);
+  const applyPromoCode = useCartStore((state) => state.applyPromoCode);
+  const removePromoCode = useCartStore((state) => state.removePromoCode);
+  const getDiscountAmount = useCartStore((state) => state.getDiscountAmount());
+  const getDiscountedSubtotal = useCartStore((state) => state.getDiscountedSubtotal());
+
   // Getters from store
   const getSubtotal = useCartStore((state) => state.getSubtotal());
   const getShipping = useCartStore((state) => state.getShipping());
@@ -25,8 +33,8 @@ export const Cart: React.FC = () => {
 
   // Free shipping math
   const FREE_SHIPPING_THRESHOLD = 150;
-  const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - getSubtotal);
-  const freeShippingProgress = Math.min(100, (getSubtotal / FREE_SHIPPING_THRESHOLD) * 100);
+  const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - getDiscountedSubtotal);
+  const freeShippingProgress = Math.min(100, (getDiscountedSubtotal / FREE_SHIPPING_THRESHOLD) * 100);
 
   if (!isCartOpen) return null;
 
@@ -128,14 +136,72 @@ export const Cart: React.FC = () => {
 
             {/* Footer Summary */}
             <div className="cart-drawer-footer">
+              {/* Promo Code Entry */}
+              <div className="promo-code-container">
+                {appliedDiscountCode ? (
+                  <div className="applied-promo">
+                    <span className="promo-badge">
+                      🏷️ {appliedDiscountCode}
+                      <button 
+                        onClick={removePromoCode}
+                        className="remove-promo-btn"
+                        aria-label="Remove promo code"
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                    <span className="promo-applied-text">Discount applied</span>
+                  </div>
+                ) : (
+                  <div className="promo-input-group">
+                    <input
+                      type="text"
+                      placeholder="Promo Code (SAVE10, FLAT15...)"
+                      value={promoInput}
+                      onChange={(e) => setPromoInput(e.target.value)}
+                      className="promo-input"
+                    />
+                    <button 
+                      onClick={() => {
+                        if (!promoInput.trim()) return;
+                        const res = applyPromoCode(promoInput);
+                        if (res.success) {
+                          addToast(res.message, 'success');
+                          setPromoInput('');
+                        } else {
+                          addToast(res.message, 'error');
+                        }
+                      }}
+                      className="promo-apply-btn"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="pricing-rows">
                 <div className="price-row">
                   <span>Subtotal</span>
                   <span>${getSubtotal.toFixed(2)}</span>
                 </div>
+                {getDiscountAmount > 0 && (
+                  <div className="price-row discount">
+                    <span>Discount</span>
+                    <span>-${getDiscountAmount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="price-row">
                   <span>Shipping</span>
-                  <span>{getShipping === 0 ? 'Free' : `$${getShipping.toFixed(2)}`}</span>
+                  <span>
+                    {appliedDiscountCode === 'FREESHIP' ? (
+                      <span className="free-shipping-coupon">Free (Coupon Applied)</span>
+                    ) : getShipping === 0 ? (
+                      'Free'
+                    ) : (
+                      `$${getShipping.toFixed(2)}`
+                    )}
+                  </span>
                 </div>
                 <div className="price-row">
                   <span>Tax (8%)</span>
@@ -400,6 +466,99 @@ export const Cart: React.FC = () => {
           padding: 1.5rem;
           border-top: 1px solid var(--border-color);
           background-color: var(--bg-secondary);
+        }
+
+        .promo-code-container {
+          margin-bottom: 1.25rem;
+          border-bottom: 1px dashed var(--border-color);
+          padding-bottom: 1.25rem;
+        }
+
+        .promo-input-group {
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .promo-input {
+          flex: 1;
+          padding: 0.5rem 0.75rem;
+          font-size: 0.8125rem;
+          border-radius: var(--radius-sm);
+          border: 1px solid var(--border-color);
+          background-color: var(--bg-primary);
+          color: var(--text-primary);
+          text-transform: uppercase;
+        }
+
+        .promo-input:focus {
+          outline: none;
+          border-color: var(--accent-color);
+        }
+
+        .promo-apply-btn {
+          padding: 0.5rem 1rem;
+          font-size: 0.8125rem;
+          font-weight: 600;
+          border-radius: var(--radius-sm);
+          background-color: var(--accent-color);
+          color: white;
+          border: none;
+          cursor: pointer;
+          transition: background-color var(--transition-fast);
+        }
+
+        .promo-apply-btn:hover {
+          background-color: var(--accent-hover);
+        }
+
+        .applied-promo {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .promo-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          padding: 0.25rem 0.625rem;
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: var(--accent-color);
+          background-color: var(--accent-light);
+          border: 1px solid var(--border-glass);
+          border-radius: var(--radius-sm);
+        }
+
+        .remove-promo-btn {
+          display: flex;
+          align-items: center;
+          border: none;
+          background: transparent;
+          color: var(--text-muted);
+          cursor: pointer;
+          padding: 1px;
+          border-radius: 50%;
+        }
+
+        .remove-promo-btn:hover {
+          color: var(--error-color);
+        }
+
+        .promo-applied-text {
+          font-size: 0.75rem;
+          color: var(--success-color);
+          font-weight: 600;
+        }
+
+        .price-row.discount {
+          color: var(--success-color);
+          font-weight: 500;
+        }
+
+        .free-shipping-coupon {
+          color: var(--success-color);
+          font-weight: 600;
         }
 
         .pricing-rows {

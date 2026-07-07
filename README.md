@@ -49,6 +49,8 @@ The project structure adheres to separation of concerns:
 
 We separated our state stores to maintain modularity: cart additions and calculations live in `cartStore`, whereas notification events live in `toastStore`. We also updated our UX design to improve browsing flow: adding products to the cart no longer forces the drawer open. Instead, a clean success toast slides in as feedback, letting the user browse the catalog uninterrupted.
 
+In this iteration, we added a Promo Code Coupon System directly into `cartStore`. Valid codes (`SAVE10`, `SAVE20`, `FLAT15`, `FREESHIP`) trigger dynamic subtotal reductions or shipping overrides. All final totals, including sales tax calculations, are derived dynamically from the *discounted* subtotal, ensuring strict financial computation. Discount codes and cart items are stored together using Zustand's local storage persistence.
+
 Calculations such as tax rates and shipping thresholds are kept as internal computed getters inside the Zustand store to maintain a single source of truth for pricing calculations, preventing UI components from performing redundant math.
 
 ## Notes

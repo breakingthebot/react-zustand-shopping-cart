@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-07-07
+
+### Added
+- Integrated Promo Code Coupon system (`SAVE10`, `SAVE20`, `FLAT15`, `FREESHIP`) inside `cartStore` state.
+- Configured dynamic price getters (`getDiscountAmount`, `getDiscountedSubtotal`) for sales tax and shipping calculations.
+- Added Applied Promo badge indicator and Promo input forms in the Cart drawer.
+- Added discount row listings to Cart and Checkout order summaries.
+- Appended 8 unit tests in `cartStore.test.ts` verifying percentage, flat, free shipping, invalid coupon codes, state clearing on checkout, and persistence updates.
+- Added `removePromoCode()` to test `beforeEach` block to resolve store state leakage.
+
 ## [0.3.0] - 2026-07-07
 
 ### Added

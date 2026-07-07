@@ -25,6 +25,9 @@ export const CheckoutFlow: React.FC = () => {
   const completeCheckout = useCartStore((state) => state.completeCheckout);
   const addToast = useToastStore((state) => state.addToast);
   
+  const appliedDiscountCode = useCartStore((state) => state.appliedDiscountCode);
+  const getDiscountAmount = useCartStore((state) => state.getDiscountAmount());
+
   const getSubtotal = useCartStore((state) => state.getSubtotal());
   const getShipping = useCartStore((state) => state.getShipping());
   const getTax = useCartStore((state) => state.getTax());
@@ -367,9 +370,23 @@ export const CheckoutFlow: React.FC = () => {
               <span>Subtotal</span>
               <span>${getSubtotal.toFixed(2)}</span>
             </div>
+            {getDiscountAmount > 0 && (
+              <div className="summary-row discount">
+                <span>Discount ({appliedDiscountCode})</span>
+                <span>-${getDiscountAmount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="summary-row">
               <span>Shipping</span>
-              <span>{getShipping === 0 ? 'Free' : `$${getShipping.toFixed(2)}`}</span>
+              <span>
+                {appliedDiscountCode === 'FREESHIP' ? (
+                  <span className="free-shipping-coupon">Free (Coupon Applied)</span>
+                ) : getShipping === 0 ? (
+                  'Free'
+                ) : (
+                  `$${getShipping.toFixed(2)}`
+                )}
+              </span>
             </div>
             <div className="summary-row">
               <span>Tax (8%)</span>
@@ -628,6 +645,16 @@ export const CheckoutFlow: React.FC = () => {
           justify-content: space-between;
           font-size: 0.875rem;
           color: var(--text-secondary);
+        }
+
+        .summary-row.discount {
+          color: var(--success-color);
+          font-weight: 500;
+        }
+
+        .free-shipping-coupon {
+          color: var(--success-color);
+          font-weight: 600;
         }
 
         .summary-row.total {

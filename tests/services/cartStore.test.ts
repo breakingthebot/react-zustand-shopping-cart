@@ -33,6 +33,7 @@ describe('useCartStore', () => {
     useCartStore.getState().clearCart();
     useCartStore.getState().resetCheckout();
     useCartStore.getState().setCartOpen(false);
+    useCartStore.getState().removePromoCode();
     localStorage.clear();
   });
 
@@ -166,5 +167,90 @@ describe('useCartStore', () => {
     const parsed = JSON.parse(persistedData!);
     expect(parsed.state.cart).toBeDefined();
     expect(parsed.state.isCartOpen).toBeUndefined(); // Should be partialized out
+  });
+
+  describe('promo codes', () => {
+    it('should validate and apply SAVE10 percentage discount code', () => {
+      const store = useCartStore.getState();
+      store.addToCart(MOCK_PRODUCT_A); // $50 subtotal
+      
+      const res = store.applyPromoCode('SAVE10');
+      expect(res.success).toBe(true);
+      expect(useCartStore.getState().appliedDiscountCode).toBe('SAVE10');
+      expect(useCartStore.getState().getDiscountAmount()).toBe(5.00); // 10% of 50
+      expect(useCartStore.getState().getDiscountedSubtotal()).toBe(45.00);
+      expect(useCartStore.getState().getTax()).toBe(3.60); // 45 * 0.08
+    });
+
+    it('should validate and apply FLAT15 flat discount code', () => {
+      const store = useCartStore.getState();
+      store.addToCart(MOCK_PRODUCT_A); // $50 subtotal
+      
+      const res = store.applyPromoCode('FLAT15');
+      expect(res.success).toBe(true);
+      expect(useCartStore.getState().getDiscountAmount()).toBe(15.00);
+      expect(useCartStore.getState().getDiscountedSubtotal()).toBe(35.00);
+    });
+
+    it('should limit flat discount to subtotal value if subtotal is smaller', () => {
+      const store = useCartStore.getState();
+      // Apply flat discount to empty cart (0 subtotal)
+      store.applyPromoCode('FLAT15');
+      expect(useCartStore.getState().getDiscountAmount()).toBe(0);
+      expect(useCartStore.getState().getDiscountedSubtotal()).toBe(0);
+    });
+
+    it('should validate and apply FREESHIP free shipping coupon', () => {
+      const store = useCartStore.getState();
+      store.addToCart(MOCK_PRODUCT_A); // $50 subtotal (under threshold)
+      
+      expect(useCartStore.getState().getShipping()).toBe(10.00); // Default shipping
+
+      const res = store.applyPromoCode('FREESHIP');
+      expect(res.success).toBe(true);
+      expect(useCartStore.getState().getShipping()).toBe(0); // Overridden to 0
+      expect(useCartStore.getState().getDiscountAmount()).toBe(0); // Subtotal unchanged
+    });
+
+    it('should reject invalid promo codes', () => {
+      const store = useCartStore.getState();
+      const res = store.applyPromoCode('INVALID');
+      expect(res.success).toBe(false);
+      expect(useCartStore.getState().appliedDiscountCode).toBeNull();
+    });
+
+    it('should remove applied promo codes correctly', () => {
+      const store = useCartStore.getState();
+      store.applyPromoCode('SAVE10');
+      expect(useCartStore.getState().appliedDiscountCode).toBe('SAVE10');
+
+      store.removePromoCode();
+      expect(useCartStore.getState().appliedDiscountCode).toBeNull();
+      expect(useCartStore.getState().getDiscountAmount()).toBe(0);
+    });
+
+    it('should clear applied promo code on checkout completion', () => {
+      const store = useCartStore.getState();
+      store.addToCart(MOCK_PRODUCT_A);
+      store.applyPromoCode('SAVE10');
+      
+      store.startCheckout();
+      store.completeCheckout();
+
+      expect(useCartStore.getState().appliedDiscountCode).toBeNull();
+    });
+
+    it('should persist appliedDiscountCode to localStorage alongside cart items', () => {
+      const store = useCartStore.getState();
+      store.addToCart(MOCK_PRODUCT_A);
+      store.applyPromoCode('SAVE10');
+
+      const persistedData = localStorage.getItem('shopping-cart-storage');
+      expect(persistedData).toBeTruthy();
+
+      const parsed = JSON.parse(persistedData!);
+      expect(parsed.state.cart).toBeDefined();
+      expect(parsed.state.appliedDiscountCode).toBe('SAVE10');
+    });
   });
 });
