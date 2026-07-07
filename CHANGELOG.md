@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-07-07
+
+### Added
+- Created `toastStore` (`src/services/toastStore.ts`) to manage active and auto-dismissing notifications.
+- Created `ToastContainer` UI (`src/components/ToastContainer.tsx`) for styling and animating notifications.
+- Integrated toast notifications inside product catalog additions, cart quantity removals, and checkout validation / order confirmation.
+- Removed intrusive auto-open behavior of the cart drawer on product additions to allow non-blocking catalog browsing.
+- Added unit tests in `toastStore.test.ts` verifying additions, manual removals, and auto-dismissal using Vitest fake timers.
+- Updated `cartStore.test.ts` to assert that the cart drawer stays closed on product additions.
+
 ## [0.2.0] - 2026-07-07
 
 ### Added

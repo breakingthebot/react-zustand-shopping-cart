@@ -8,6 +8,7 @@ import { Search, Star, Plus } from 'lucide-react';
 import type { Product } from '../models/product';
 import { fetchProducts } from '../services/productService';
 import { useCartStore } from '../services/cartStore';
+import { useToastStore } from '../services/toastStore';
 
 export const ProductCatalog: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -16,6 +17,7 @@ export const ProductCatalog: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   
   const addToCart = useCartStore((state) => state.addToCart);
+  const addToast = useToastStore((state) => state.addToast);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -117,7 +119,10 @@ export const ProductCatalog: React.FC = () => {
                 <div className="product-footer">
                   <span className="product-price">${product.price.toFixed(2)}</span>
                   <button
-                    onClick={() => addToCart(product)}
+                    onClick={() => {
+                      addToCart(product);
+                      addToast(`Added ${product.name} to cart!`, 'success');
+                    }}
                     className="add-to-cart-btn"
                     aria-label={`Add ${product.name} to cart`}
                   >

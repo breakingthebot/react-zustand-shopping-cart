@@ -6,6 +6,7 @@
 import React from 'react';
 import { X, Minus, Plus, Trash2, ArrowRight } from 'lucide-react';
 import { useCartStore } from '../services/cartStore';
+import { useToastStore } from '../services/toastStore';
 
 export const Cart: React.FC = () => {
   const isCartOpen = useCartStore((state) => state.isCartOpen);
@@ -14,6 +15,7 @@ export const Cart: React.FC = () => {
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const startCheckout = useCartStore((state) => state.startCheckout);
+  const addToast = useToastStore((state) => state.addToast);
 
   // Getters from store
   const getSubtotal = useCartStore((state) => state.getSubtotal());
@@ -87,7 +89,12 @@ export const Cart: React.FC = () => {
                     <div className="cart-item-controls">
                       <div className="qty-picker">
                         <button
-                          onClick={() => updateQuantity(product.id, quantity - 1)}
+                          onClick={() => {
+                            updateQuantity(product.id, quantity - 1);
+                            if (quantity - 1 === 0) {
+                              addToast(`Removed ${product.name} from cart.`, 'info');
+                            }
+                          }}
                           className="qty-btn"
                           aria-label="Decrease quantity"
                         >
@@ -104,7 +111,10 @@ export const Cart: React.FC = () => {
                       </div>
 
                       <button
-                        onClick={() => removeFromCart(product.id)}
+                        onClick={() => {
+                          removeFromCart(product.id);
+                          addToast(`Removed ${product.name} from cart.`, 'info');
+                        }}
                         className="item-delete-btn"
                         aria-label={`Remove ${product.name} from cart`}
                       >

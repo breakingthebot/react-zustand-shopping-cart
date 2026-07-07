@@ -44,7 +44,7 @@ describe('useCartStore', () => {
     expect(state.getSubtotal()).toBe(0);
   });
 
-  it('should add a product to the cart and open the drawer', () => {
+  it('should add a product to the cart', () => {
     const store = useCartStore.getState();
     store.addToCart(MOCK_PRODUCT_A);
 
@@ -52,7 +52,7 @@ describe('useCartStore', () => {
     expect(updatedState.cart.length).toBe(1);
     expect(updatedState.cart[0].product).toEqual(MOCK_PRODUCT_A);
     expect(updatedState.cart[0].quantity).toBe(1);
-    expect(updatedState.isCartOpen).toBe(true);
+    expect(updatedState.isCartOpen).toBe(false);
     expect(updatedState.getTotalItems()).toBe(1);
   });
 

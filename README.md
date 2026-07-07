@@ -43,9 +43,11 @@ In this iteration, we integrated Zustand's `persist` middleware to cache cart da
 
 The project structure adheres to separation of concerns:
 - `src/models/` contains our domain data structures (`Product`, `CartItem`).
-- `src/services/` holds our business logic and state management stores (`cartStore` and `productService`).
-- `src/components/` hosts single-responsibility presentation elements (`Navbar`, `ProductCatalog`, `Cart`, `CheckoutFlow`).
+- `src/services/` holds our business logic and state management stores (`cartStore`, `toastStore`, and `productService`).
+- `src/components/` hosts single-responsibility presentation elements (`Navbar`, `ProductCatalog`, `Cart`, `CheckoutFlow`, `ToastContainer`).
 - `tests/` mirrors the structure of `src/` to host matching unit and integration test files.
+
+We separated our state stores to maintain modularity: cart additions and calculations live in `cartStore`, whereas notification events live in `toastStore`. We also updated our UX design to improve browsing flow: adding products to the cart no longer forces the drawer open. Instead, a clean success toast slides in as feedback, letting the user browse the catalog uninterrupted.
 
 Calculations such as tax rates and shipping thresholds are kept as internal computed getters inside the Zustand store to maintain a single source of truth for pricing calculations, preventing UI components from performing redundant math.
 

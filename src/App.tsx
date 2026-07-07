@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { Navbar } from './components/Navbar';
+import { ToastContainer } from './components/ToastContainer';
 import { ProductCatalog } from './components/ProductCatalog';
 import { Cart } from './components/Cart';
 import { CheckoutFlow } from './components/CheckoutFlow';
@@ -19,6 +20,7 @@ const App: React.FC = () => {
   return (
     <div className="app-layout">
       <Navbar />
+      <ToastContainer />
       
       <main className="main-content">
         {showCheckout ? (

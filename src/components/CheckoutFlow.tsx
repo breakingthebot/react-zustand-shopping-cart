@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, CreditCard, ShieldCheck, CheckCircle } from 'lucide-react';
 import { useCartStore } from '../services/cartStore';
+import { useToastStore } from '../services/toastStore';
 
 interface FormErrors {
   name?: string;
@@ -22,6 +23,7 @@ export const CheckoutFlow: React.FC = () => {
   const cart = useCartStore((state) => state.cart);
   const resetCheckout = useCartStore((state) => state.resetCheckout);
   const completeCheckout = useCartStore((state) => state.completeCheckout);
+  const addToast = useToastStore((state) => state.addToast);
   
   const getSubtotal = useCartStore((state) => state.getSubtotal());
   const getShipping = useCartStore((state) => state.getShipping());
@@ -172,13 +174,17 @@ export const CheckoutFlow: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      addToast('Please correct the validation errors in the form.', 'error');
+      return;
+    }
 
     setProcessing(true);
     // Simulate payment authorization
     setTimeout(() => {
       setProcessing(false);
       completeCheckout();
+      addToast('Payment authorized! Order confirmed successfully.', 'success');
     }, 1500);
   };
 

@@ -62,12 +62,11 @@ export const useCartStore = create<CartState>()(
               ...updatedCart[existingItemIndex],
               quantity: updatedCart[existingItemIndex].quantity + 1,
             };
-            return { cart: updatedCart, isCartOpen: true };
+            return { cart: updatedCart };
           } else {
             // Add new item with quantity 1
             return {
-              cart: [...state.cart, { product, quantity: 1 }],
-              isCartOpen: true,
+              cart: [...state.cart, { product, quantity: 1 }]
             };
           }
         });
