@@ -37,7 +37,9 @@ Refer to `.env.example`. No custom environment variables are required for this i
 *Not yet deployed.*
 
 ## Architecture Notes
-For this project, I chose **React** for the user interface and **Zustand** for state management. Zustand was chosen over Redux Toolkit because of its minimal boilerplate, easy-to-use hooks, and clean integration with vanilla TypeScript outside the React lifecycle (which makes unit testing our store operations straightforward).
+For this project, I chose **React** for the user interface and **Zustand** for state management. Zustand was chosen over Redux Toolkit because of its minimal boilerplate, easy-to-use hooks, and clean integration with vanilla TypeScript outside the React lifecycle. 
+
+In this iteration, we integrated Zustand's `persist` middleware to cache cart data in `localStorage` under the key `shopping-cart-storage`. We configured it with `partialize` to selectively serialize only the transactional `cart` items. UI state triggers (like drawer visibility or order validation statuses) are intentionally excluded, providing a consistent UX where refreshing the page restores products but doesn't disrupt user views.
 
 The project structure adheres to separation of concerns:
 - `src/models/` contains our domain data structures (`Product`, `CartItem`).

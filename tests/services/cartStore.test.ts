@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useCartStore } from '../../src/services/cartStore';
-import { Product } from '../../src/models/product';
+import type { Product } from '../../src/models/product';
 
 const MOCK_PRODUCT_A: Product = {
   id: 'prod-a',
@@ -33,6 +33,7 @@ describe('useCartStore', () => {
     useCartStore.getState().clearCart();
     useCartStore.getState().resetCheckout();
     useCartStore.getState().setCartOpen(false);
+    localStorage.clear();
   });
 
   it('should initialize with an empty cart and closed state', () => {
@@ -142,5 +143,28 @@ describe('useCartStore', () => {
     expect(finishedState.cart).toEqual([]);
     expect(finishedState.isCheckingOut).toBe(false);
     expect(finishedState.checkoutSuccess).toBe(true);
+  });
+
+  it('should persist cart items to localStorage', () => {
+    const store = useCartStore.getState();
+    store.addToCart(MOCK_PRODUCT_A);
+
+    const persistedData = localStorage.getItem('shopping-cart-storage');
+    expect(persistedData).toBeTruthy();
+
+    const parsed = JSON.parse(persistedData!);
+    expect(parsed.state.cart.length).toBe(1);
+    expect(parsed.state.cart[0].product.id).toBe(MOCK_PRODUCT_A.id);
+  });
+
+  it('should only persist cart and exclude UI state like isCartOpen', () => {
+    const store = useCartStore.getState();
+    store.addToCart(MOCK_PRODUCT_A);
+    store.setCartOpen(true);
+
+    const persistedData = localStorage.getItem('shopping-cart-storage');
+    const parsed = JSON.parse(persistedData!);
+    expect(parsed.state.cart).toBeDefined();
+    expect(parsed.state.isCartOpen).toBeUndefined(); // Should be partialized out
   });
 });
